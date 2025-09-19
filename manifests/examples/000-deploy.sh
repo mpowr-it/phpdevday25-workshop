@@ -33,5 +33,5 @@ kubectl -n default get secret sample-02-opaque -o yaml;
 #
 # remove all secrets
 # --
-kubectl -n default delete sample-01-opaque
-kubectl -n default delete sample-02-opaque
+# kubectl -n default delete secret sample-01-opaque
+# kubectl -n default delete secret sample-02-opaque

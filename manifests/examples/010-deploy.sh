@@ -15,8 +15,8 @@ kubectl -n default create secret generic sample-00-opaque \
 #
 # create the corresponding k8s pod, mount and print-out the corresponding secret
 # --
-kubectl apply -f 010-pod.yaml
-kubectl logs secret-pod-test -n default
+kubectl apply -f 010-deploy.yaml
+kubectl logs deployment/secret-pod-test -n default
 
 #
 # remove pod and secret
