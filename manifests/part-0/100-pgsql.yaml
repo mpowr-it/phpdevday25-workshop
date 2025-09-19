@@ -1,0 +1,39 @@
+# CloudNativePG single-instance cluster for Part 0.
+# Services created:
+#   - zero-pg-rw : primary (read/write)
+#   - zero-pg-ro : read-only
+#   - zero-pg    : headless
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: zero-pg
+  namespace: int-app-zero
+spec:
+  # Single instance (demo-friendly). For HA, set to 3.
+  instances: 1
+
+  # Solid default image (PostgreSQL 16).
+  imageName: ghcr.io/cloudnative-pg/postgresql:16
+
+  # Storage. Set a StorageClass if your cluster does not have a default.
+  storage:
+    size: 10Gi
+    storageClass: local-path  # adjust if you use a different default
+
+
+  # Initialize one database "app" and owner "app".
+  # The password comes from Secret "zero-pg-app".
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+      secret:
+        # CNPG expects keys "username" and "password" in this secret
+        name: zero-pg-app
+
+  postgresql:
+    parameters:
+      max_connections: "300"
+
+  enablePDB: true

@@ -1,0 +1,170 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-autoresolver
+  namespace: int-app-delta
+data:
+  "15-autoresolver.sh": |-
+    #!/usr/bin/env sh
+    set -eu
+    NS_ALL="$(awk '/^nameserver/{print $2}' /etc/resolv.conf || true)"
+    NS4="$(printf '%s\n' "$NS_ALL" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' || true)"
+    NS6_RAW="$(printf '%s\n' "$NS_ALL" | grep -E ':' || true)"
+    NS6="$(printf '%s\n' "$NS6_RAW" | sed 's/^/[/' | sed 's/$/]/' | xargs || true)"
+    NS4_INLINE="$(printf '%s\n' "$NS4" | xargs || true)"
+    if [ -n "$NS4_INLINE" ] && [ -n "$NS6" ]; then
+      RESOLVERS="$NS4_INLINE $NS6"
+      IPV6_PARAM="ipv6=on"
+    elif [ -n "$NS4_INLINE" ]; then
+      RESOLVERS="$NS4_INLINE"
+      IPV6_PARAM="ipv6=off"
+    elif [ -n "$NS6" ]; then
+      RESOLVERS="$NS6"
+      IPV6_PARAM="ipv6=on"
+    else
+      echo "[autoresolver] no nameserver found in /etc/resolv.conf" >&2
+      exit 0
+    fi
+
+    printf 'resolver %s %s valid=30s;\nresolver_timeout 2s;\n' "$RESOLVERS" "$IPV6_PARAM" \
+      > /usr/local/openresty/nginx/conf/conf.d/zz-resolver.conf
+    chmod 0644 /usr/local/openresty/nginx/conf/conf.d/zz-resolver.conf
+    echo "[autoresolver] wrote: $(cat /usr/local/openresty/nginx/conf/conf.d/zz-resolver.conf)"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app-lua-db-deployment
+  namespace: int-app-delta
+  labels:
+    # @info: please only set labels here that are not already included
+    # in the pre-definitions for labels in the kustomized.yaml file!
+    # ext-1: context labels (for replica-sets & services)
+    app: web-app-lua-db
+    app.mpowr.io/scope: deployment
+    app.mpowr.io/context: workshop
+    app.mpowr.io/subject: phpdevday25-workshop-db
+    app.mpowr.io/canary: none
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-app-lua-db
+
+  template:
+    metadata:
+      labels:
+        app: web-app-lua-db
+        app.mpowr.io/scope: pod
+        app.mpowr.io/context: workshop
+        app.mpowr.io/subject: phpdevday25-workshop
+        app.mpowr.io/canary: none
+
+    spec:
+      containers:
+        - name: web-app-lua-db
+          image: docker.io/mpowr/k8s-app-nginx-lua-db:1.0.8
+          imagePullPolicy: Always
+          command: [ "/bin/sh","-c" ]
+          args:
+            - |
+              set -e
+              if [ -x /docker-entrypoint.d/15-autoresolver.sh ]; then
+                echo "[autoresolver] running pre-start script ..."
+                /docker-entrypoint.d/15-autoresolver.sh || true
+              else
+                echo "[autoresolver] script not found or not executable!"
+              fi
+              exec /usr/local/openresty/bin/openresty -g 'daemon off;'
+          ports:
+            - containerPort: 8080
+
+          # some special settings (incl auth-data) from external secret
+          envFrom:
+            - secretRef:
+                name: delta-pg-app
+
+          # some additional direct environment variable set's
+          env:
+            - name: C_MESSAGE
+              value: "Hi, I was deployed just a minute ago 😎👌"
+            - name: C_APP_VERSION
+              value: "1.0.8"
+            - name: C_APP_COMPANY
+              value: "PHPDevDay-2025"
+
+          volumeMounts:
+            - name: nginx-autoresolver
+              mountPath: /docker-entrypoint.d/15-autoresolver.sh
+              subPath: 15-autoresolver.sh
+              readOnly: true
+
+      volumes:
+        - name: nginx-autoresolver
+          configMap:
+            name: nginx-autoresolver
+            defaultMode: 0755
+
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: web-app-lua-db
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-app-lua-db-internal
+  namespace: int-app-delta
+  labels:
+    app.mpowr.io/scope: service
+    app.mpowr.io/context: workshop
+    app.mpowr.io/subject: phpdevday25-workshop
+    app.mpowr.io/canary: none
+
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+
+  selector:
+    app: web-app-lua-db
+
+# ---
+# *** not_used_yet ***
+# ---
+# apiVersion: traefik.io/v1alpha1
+# kind: IngressRoute
+# metadata:
+#   name: test-web-app-lua-db-ingress-route-external
+#   namespace: int-app-delta
+#   labels:
+#     app.mpowr.io/scope: ingress-route
+#     app.mpowr.io/context: workshop
+#     app.mpowr.io/subject: phpdevday25-workshop
+#     app.mpowr.io/canary: none
+#
+# spec:
+#   entryPoints:
+#     - websecure
+#
+#   routes:
+#     - kind: Rule
+#       match: Host(`app-test-lua-db.mpowr.it`)
+#       services:
+#         - name: web-app-lua-db-internal
+#           port: 80
+
+---
+###
+

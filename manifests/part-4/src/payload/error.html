@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Internal Server Error, HTTP-500">
+    <meta name="author" content="MPOWR IT Labs">
+    <link rel="shortcut icon" href="/assets/img/favicons/v2/favicon.png">
+    <!-- Retina iPad Touch Icon-->
+    <link rel="apple-touch-icon" sizes="144x144" href="/assets/img/favicons/v2/favicon-retina-ipad.png">
+    <!-- Retina iPhone Touch Icon-->
+    <link rel="apple-touch-icon" sizes="114x114" href="/assets/img/favicons/v2/favicon-retina-iphone.png">
+    <!-- Standard iPad Touch Icon-->
+    <link rel="apple-touch-icon" sizes="72x72" href="/assets/img/favicons/v2/favicon-standard-ipad.png">
+    <!-- Standard iPhone Touch Icon-->
+    <link rel="apple-touch-icon" sizes="57x57" href="/assets/img/favicons/v2/favicon-standard-iphone.png">
+    <title>Something goes wrong</title>
+    <link href="/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/dist/js/highlightjs/styles/night-owl.min.css" rel="stylesheet">
+    <link href="/cover.css" rel="stylesheet">
+  </head>
+
+  <body class="text-center theme-v2">
+
+    <div class="cover-container d-flex h-100 p-3 mx-auto flex-column">
+
+      <main role="main" class="inner cover">
+        <img class="logo" src="/assets/brand/mpowr-logo-webapp-color-highres.png" alt="logo" width="200">
+
+        <h1 class="cover-heading">ERROR <!--# echo var="status" default="501" --></h1>
+        <p class="lead">This feedback is based on an error code placed via the URL and is used for testing purposes only. The error code is therefore not necessarily based on an actual fault.</p>
+        <div class="code ini">
+  [error-code-<!--# echo var="status" default="501" -->]
+  ;
+  ; <!--# echo var="status_text" default="something happened" -->
+  ;
+        </div>
+      </main>
+
+      <footer class="mastfoot mt-auto">
+        <div class="inner">
+          <p>created by <a href="https://www.mpowr.it/">MPOWR IT GmbH</a> as part of our internal DevOps/Container-Toolkit</p>
+        </div>
+      </footer>
+    </div>
+
+    <script src="/assets/js/vendor/jquery-3.2.1.slim.min.js"></script>
+    <script src="/dist/js/bootstrap.min.js"></script>
+    <script src="/dist/js/highlightjs/highlight.min.js"></script>
+    <script src="/dist/js/main.js"></script>
+    <script></script>
+  </body>
+</html>

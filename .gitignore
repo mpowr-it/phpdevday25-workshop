@@ -1,0 +1,72 @@
+#
+# OS related excludes
+# --
+.DS_Store
+*.so
+._*
+
+#
+# IDE (jetbrain, zed + vscode)
+# --
+# Jetbrain:*
+.zed
+.idea
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# VSC: Local History for Visual Studio Code
+.history/
+
+# VSC: Built Visual Studio Code Extensions
+*.vsix
+
+#
+# Additional (project related) exclusions (your excludes)
+# --
+log/
+logs/
+vault/
+auth/*
+cache/*
+!cache/.gitkeep
+!logs/.gitkeep
+external-dns/cache
+
+# --
+# Global gitignore for the entire monorepo. Only add things here that truly
+# need to always be ignored regardless of project.
+#
+# If something is more specific to a particular project, add a gitignore in the
+# corresponding subdirectory.
+
+# ** NodeJS
+node_modules
+.yalc
+dist
+
+# ** Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/*
+
+# ** Java
+*.class
+*.jar
+
+# ** devcontainer
+*.devcontainer
+
+# ** test specific files
+.test_tmp_*
+
+# ** deployment
+.vercel
+.yarn
+
+# ** local dev additions
+# /devbox.json

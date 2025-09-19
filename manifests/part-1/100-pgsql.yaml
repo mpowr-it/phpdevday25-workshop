@@ -1,0 +1,45 @@
+# CloudNativePG single-instance cluster for the workshop.
+# It creates standard services:
+#   - alpha-pg-rw : primary (read/write) service
+#   - alpha-pg-ro : read-only service
+#   - alpha-pg    : headless service for pods
+#
+# The application database is "app" with owner "app".
+# The password is pulled from Secret "alpha-pg-app" (we will MERGE into this via ESO).
+#
+# IMPORTANT for ESO later:
+# - We'll label the target Secret with `cnpg.io/reload: "true"` (in the ExternalSecret)
+#   so CNPG updates the DB role password automatically on Secret change.
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: alpha-pg
+spec:
+  # Single instance (demo-friendly). For HA, set to 3.
+  instances: 1
+
+  # Solid default image (PostgreSQL 16).
+  imageName: ghcr.io/cloudnative-pg/postgresql:16
+
+  # Storage. Set a StorageClass if your cluster does not have a default.
+  storage:
+    size: 20Gi
+    storageClass: local-path
+
+  # Initialize one database "app" and owner "app".
+  # The password comes from Secret "alpha-pg-app".
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+      secret:
+        name: alpha-pg-app
+
+  # Common DB params; keep it simple for workshops.
+  postgresql:
+    parameters:
+      max_connections: "300"
+
+  # Gentle cordons/drains during node ops.
+  enablePDB: true

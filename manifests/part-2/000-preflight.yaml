@@ -1,0 +1,35 @@
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: int-app-beta
+  labels:
+    # Use whatever org/owner/team labels you like
+    app.kubernetes.io/part-of: beta-stack
+    env: demo
+
+---
+
+#
+# ServiceAccount used by ESO to authenticate against Vault (Kubernetes auth).
+# --
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: eso-vault
+  namespace: int-app-beta
+
+---
+
+# (Optional) ResourceQuota or LimitRange go here if you want guardrails for the workshop
+# apiVersion: v1
+# kind: ResourceQuota
+# metadata:
+#   name: rq-default
+# spec:
+#   hard:
+#     requests.cpu: "4"
+#     requests.memory: 8Gi
+#     limits.cpu: "8"
+#     limits.memory: 16Gi

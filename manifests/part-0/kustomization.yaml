@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# All resources live in this namespace
+namespace: int-app-zero
+
+resources:
+  - 000-preflight.yaml
+  - 090-secret-static.yaml
+  - 100-pgsql.yaml
+
+labels:
+  - includeSelectors: true
+    pairs:
+      app.kubernetes.io/part-of: zero-stack
+      app.kubernetes.io/managed-by: kustomize

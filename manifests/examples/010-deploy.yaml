@@ -1,0 +1,64 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secret-pod-test
+  namespace: default
+  labels:
+    app: secret-pod-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: secret-pod-test
+  template:
+    metadata:
+      labels:
+        app: secret-pod-test
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      containers:
+        - name: test
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo 'secret-pod-test ready';
+              UFILE='<missing>'; PFILE='<missing>';
+              [ -f /etc/pg/creds/username ] && UFILE="$(cat /etc/pg/creds/username)";
+              [ -f /etc/pg/creds/password ] && PFILE="$(cat /etc/pg/creds/password)";
+              printf 'username from env=%s; username from mounted-file=%s\n' "$APP_USER" "$UFILE";
+              printf 'password from env=%s; password from mounted-file=%s\n' "$APP_PASSWORD" "$PFILE";
+              tail -f /dev/null
+          env:
+            - name: APP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: sample-00-opaque
+                  key: username
+            - name: APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sample-00-opaque
+                  key: password
+          volumeMounts:
+            - name: pg-creds
+              mountPath: /etc/pg/creds
+              readOnly: true
+      volumes:
+        - name: pg-creds
+          secret:
+            secretName: sample-00-opaque
+            defaultMode: 0400
+            items:
+              - key: username
+                path: username
+              - key: password
+                path: password
+
+
+
+---
+###
