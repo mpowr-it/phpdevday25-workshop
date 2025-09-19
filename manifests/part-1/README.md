@@ -101,7 +101,7 @@ These checks ensure that ESO has synced credentials correctly and that CNPG is u
 
 ```bash
 # 003.0 - Inspect auto generated secrets for pgsql
-kubectl -n int-app-alpha get secret alpha-pg-app -o go-template='{{range $k,$v := .data}}{{printf "%s: %s\n" $k ($v | base64decode)}}{{end}}'
+k
 
 # 003.1 - Test the Postgres Connection (using CNPG + ESO secret)
 

@@ -116,7 +116,7 @@ KUBE_CA="$(kubectl -n kube-system get cm kube-root-ca.crt -o jsonpath='{.data.ca
 KUBE_HOST="https://kubernetes.default.svc:443"
 
 # 004.2 - Enable Kubernetes auth in Vault (idempotent)
-vault auth enable kubernetes || true
+vault auth enable kubernetes 2>/dev/null || true
 
 # 004.3 - Configure the Kubernetes auth method
 vault write auth/kubernetes/config \
@@ -134,23 +134,22 @@ HCL
 
 # 004.5 - Bind policy to ESO ServiceAccount in ns int-app-beta
 vault write auth/kubernetes/role/eso-beta \
-      bound_service_account_names=eso-vault \
-      bound_service_account_namespaces=int-app-beta \
-      audience="https://kubernetes.default.svc.cluster.local" \
-      policies=eso-beta \
-      ttl=1h
+  bound_service_account_names=eso-vault \
+  bound_service_account_namespaces=int-app-beta \
+  token_policies=eso-beta \
+  token_ttl=1h \
+  token_max_ttl=2h \
+  token_audiences="https://kubernetes.default.svc.cluster.local"
 ```
+
+# 004.6 check config
+vault read auth/kubernetes/role/eso-beta
 
 ## Insert PostgreSQL Credentials into Vault
 
 ```bash
 # 005.0 - Store pgsql demo credentials (and further values) in Vault
-vault kv put kv-beta/app/config \
-      username=app \
-      password='S3cur3-Pa55w0rd!' \ 
-      database=app \
-      host=beta-pg-rw.int-app-beta.svc.cluster.local \ 
-      port=5432
+vault kv put kv-beta/app/config username=app password='S3cur3-Pa55w0rd123' database=app host=beta-pg-rw.int-app-beta.svc.cluster.local port=5432
 ```
 
 ## Check & Evaluate
